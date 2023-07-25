@@ -1,5 +1,6 @@
 import * as FileSystem from 'expo-file-system';
 import { Log } from './log';
+const host = 'http://192.168.3.168:3001'
 
 
 function randomId() {
@@ -34,7 +35,7 @@ export async function addSong(id) {
     const fileId = randomId()
     try {
         const fileUri = FileSystem.documentDirectory + `appDocs/info/${fileId}.json`;
-        const remoteUrl = `http://127.0.0.1:3001/info/${id}`;
+        const remoteUrl = `${host}/info/${id}`;
         const downloadResult = await FileSystem.downloadAsync(remoteUrl, fileUri);
         console.log('Downloaded file URI:', downloadResult.uri);
 
@@ -43,7 +44,7 @@ export async function addSong(id) {
     }
     try {
         const fileUri = FileSystem.documentDirectory + `appDocs/files/${fileId}.mp3`;
-        const remoteUrl = `http://127.0.0.1:3001/download/${id}`;
+        const remoteUrl = `${host}/download/byYtId/${id}`;
         const downloadResult = await FileSystem.downloadAsync(remoteUrl, fileUri);
         console.log('Downloaded file URI:', downloadResult.uri);
         Log.notification("Downloaded!");
@@ -53,7 +54,7 @@ export async function addSong(id) {
     }
 }
 
-export function deleteFunc(id, setMenu) {
+export function deleteFunc(id) {
     let name = id.split('.')[0]
     FileSystem.deleteAsync(FileSystem.documentDirectory + `appDocs/files/${name}.mp3`).then((val) => { console.log(val) })
     // FileSystem.deleteAsync(FileSystem.documentDirectory + `appDocs/files/${"fsSES"}.mp4`).then((val) => { console.log(val) })

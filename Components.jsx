@@ -2,13 +2,15 @@ import { Button, StyleSheet, Text, View, TextInput, Image, Pressable } from 'rea
 import styles from './styles'
 import Ionicons from '@expo/vector-icons/Ionicons';
 import Slider from '@react-native-community/slider';
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import Animated, {
     useSharedValue,
     withTiming,
     useAnimatedStyle,
     Easing,
 } from 'react-native-reanimated';
+import { PlayingContext } from './Provider';
+import { deleteFunc } from './functions';
 
 
 
@@ -30,10 +32,16 @@ export default function BottomBar({ nav, at }) {
     function goHome() {
         nav.navigate('Home')
     }
+    function goSearch() {
+        nav.navigate("Search")
+    }
     return (
         <View style={styles.bottomDiv}>
             <Pressable style={styles.btnBox} onPress={() => goHome()}>
                 <Ionicons name={at === "Home" ? "home" : "home-outline"} size={40} color="white" />
+            </Pressable>
+            <Pressable style={styles.btnBox} onPress={() => goSearch()}>
+                <Ionicons name={at === "Search" ? "search-circle" : "search-circle-outline"} size={45} color="white" />
             </Pressable>
             <Pressable style={styles.btnBox} onPress={() => goAdd()}>
                 <Ionicons name={at === "Add" ? "add-circle" : "add-circle-outline"} size={40} color="white" />
@@ -42,24 +50,41 @@ export default function BottomBar({ nav, at }) {
     )
 }
 
-export function PlayingSpace({ pos, onPausePressed, playing, soundInfo = { duration: 0, position: 0, name: '', author: '', img: null }, onValueChanged, img }) {
+
+export function PlayingSpace() {
+    const { soundInfo, setPos, pos, isPlaying, playSound, onChangedDur } = useContext(PlayingContext);
+
     const duration = soundInfo.duration;
     const name = soundInfo.name
     const author = soundInfo.author
+
+    const wordLimiter = (word, limit) =>{
+        let newWord = '';
+        for(let i=0; i < word.split('').length; i++){
+            if (i<limit){
+                newWord+=word.split('')[i]
+            }else{
+                break;
+            }
+        }
+        
+        return(newWord)
+    }
+
     return (
         <View style={styles.playingSpace}>
             <View style={styles.card}>
                 <View style={styles.top}>
                     <Image style={styles.pfp} source={{ uri: soundInfo.img }} />
                     <View style={styles.texts}>
-                        <Text style={styles.title1}>{name}</Text>
+                        <Text style={styles.title1}>{[...name.split('')].length>=25?wordLimiter(name, 25)+"...":name}</Text>
                         <Text style={styles.title2}>{author}</Text>
                     </View>
                 </View>
                 <View style={{ flexDirection: 'row', justifyContent: 'center', width: '100%', marginTop: 30 }}>
                     <View style={styles.controls}>
                         <Ionicons name='arrow-back-circle' size={30} color="white" />
-                        <Pressable onPress={() => onPausePressed()}><Ionicons name={`${playing ? 'pause' : 'play'}-circle`} size={30} color="white" /></Pressable>
+                        <Pressable onPress={() => playSound(false)}><Ionicons name={`${isPlaying ? 'pause' : 'play'}-circle`} size={30} color="white" /></Pressable>
                         <Ionicons name='arrow-forward-circle' size={30} color="white" />
                     </View>
                 </View>
@@ -68,7 +93,7 @@ export function PlayingSpace({ pos, onPausePressed, playing, soundInfo = { durat
                         style={styles.time}
                         minimumValue={0}
                         value={pos}
-                        onValueChange={(v) => onValueChanged(v)}
+                        onValueChange={(v) => onChangedDur(v)}
                         maximumValue={duration}
                         trackStyle={{ height: 10, borderRadius: 5 }}
                         thumbStyle={{ width: 20, height: 20, borderRadius: 10 }}
@@ -85,6 +110,8 @@ export function PlayingSpace({ pos, onPausePressed, playing, soundInfo = { durat
         </View>
     )
 }
+
+
 
 export function TopBar({ at }) {
     return (
@@ -114,8 +141,9 @@ export function EnterButton({ onPress }) {
         </Pressable>
     )
 }
-
-export function SongMenu({ show, onClose, deleteFunc, ytFunc, info, animVal }) {
+import * as Linking from 'expo-linking';
+export function SongMenu() {
+    const { showMenu, animVal, setShowMenu, isPlaying, playSound, onChangedDur } = useContext(PlayingContext);
     const config = {
         duration: 500,
         easing: Easing.bezier(0.5, 0.01, 0, 1),
@@ -127,26 +155,41 @@ export function SongMenu({ show, onClose, deleteFunc, ytFunc, info, animVal }) {
         };
     });
     return (
-        <Pressable style={{ height: '100%', width: '100%', position: 'absolute', zIndex: 90, display: show.show ? 'flex' : 'none' }} onPress={() => onClose()}>
+        <Pressable style={{ height: '100%', width: '100%', position: 'absolute', zIndex: 500, display: showMenu.show ? 'flex' : 'none' }} onPress={() => { animVal.value = -350; setTimeout(() => { setShowMenu({ id: '', show: false, ytId: '' }); }, 500) }}>
             <Animated.View style={[styles.songMenu, animStyle]}>
                 <View style={{ flexDirection: 'row', width: '100%', marginTop: 20, borderBottomColor: '#3B3B3B', borderBottomWidth: 1, paddingBottom: 15 }}>
-                    <Image style={{ marginLeft: 10, marginRight: 10, height: 50, width: 50, borderRadius: 5, backgroundColor: '#7B7B7B' }} source={{ uri: info.img }} />
+                    <Image style={{ marginLeft: 10, marginRight: 10, height: 50, width: 50, borderRadius: 5, backgroundColor: '#7B7B7B' }} source={{ uri: showMenu.img }} />
                     <View style={{ marginLeft: 30, }}>
-                        <Text style={{ color: '#fff', fontSize: 20, width: '80%' }} numberOfLines={9}>{info.name}</Text>
-                        <Text style={{ color: '#7B7B7B', fontSize: 15 }} numberOfLines={9}>{info.author}</Text>
+                        <Text style={{ color: '#fff', fontSize: 20, width: '80%' }} numberOfLines={9}>{showMenu.title}</Text>
+                        <Text style={{ color: '#7B7B7B', fontSize: 15 }} numberOfLines={9}>{showMenu.author}</Text>
                     </View>
                 </View>
 
-                <Pressable style={[styles.deleteBtn, { marginTop: 10 }]} onPress={() => deleteFunc()}>
+                <Pressable style={[styles.deleteBtn, { marginTop: 10 }]} onPress={() => deleteFunc(showMenu.id)}>
                     <Ionicons name='trash' size={30} color={'#656565'} />
                     <Text style={{ fontSize: 20, color: '#fff' }}>Delete</Text>
                 </Pressable>
-                <Pressable style={[styles.deleteBtn, { marginTop: 10 }]} onPress={() => ytFunc()}>
+                <Pressable style={[styles.deleteBtn, { marginTop: 10 }]} onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${showMenu.ytId}`)}>
                     <Ionicons name='logo-youtube' size={30} color={'#656565'} />
                     <Text style={{ fontSize: 20, color: '#fff' }}> Show In Youtube</Text>
                 </Pressable>
             </Animated.View>
         </Pressable>
 
+    )
+}
+
+
+export function SearchRez({ onClick, img, songName, authorName }) {
+
+
+    return (
+        <Pressable style={styles.songBox} onPress={() => onClick()}>
+            <Image style={{ height: 100, width: 100, borderRadius: 10 }} source={{ uri: img }} />
+            <View>
+                <Text style={{ color: "#fff", fontSize: 15, marginLeft: 20, marginRight: 30, fontFamily: 'monospace' }} numberOfLines={9}>{songName}</Text>
+                <Text style={{ color: "#fff", fontSize: 10, marginLeft: 20 }}>By {authorName}</Text>
+            </View>
+        </Pressable>
     )
 }

@@ -25,6 +25,7 @@ const styles = StyleSheet.create({
         display: 'flex',
         flexDirection: 'row',
         justifyContent: 'center',
+        zIndex: 50
     },
     card: {
         position: 'relative',
@@ -57,12 +58,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         flexDirection: 'column',
         top: 0,
-        left: "20%"
+        left: "20%",
+        width: '90%'
     },
     title1: {
         color: 'white',
         fontSize: 20,
-        width: '80%',
+        width: '100%',
         textAlign: 'left',
         fontWeight: 'bold',
     },
@@ -115,7 +117,7 @@ const styles = StyleSheet.create({
         zIndex: 10
     },
     songBox: {
-        width: '95%',
+        width: '80%',
         height: 100,
         marginBottom: 5,
         marginTop: 5,
@@ -135,7 +137,7 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         justifyContent: 'center',
-        alignItems: 'center',
+        // alignItems: 'center',
     },
     inputId: {
         display: 'flex',
@@ -176,11 +178,12 @@ const styles = StyleSheet.create({
         width: "100%",
         backgroundColor: '#262626',
         position: 'absolute',
-        zIndex: 100,
+        zIndex: 600,
         alignSelf: 'center',
         bottom: -350,
         borderRadius: 15,
         alignItems: 'center',
+        
     },
     deleteBtn:{
         height: 40,
@@ -189,7 +192,41 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         alignItems: 'center',
         flexDirection: 'row'
-    }
+    },
+    searchInputDiv:{
+        height: 50, 
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+        position: 'absolute',
+        top: '15%',
+    },
+
+    searchInput:{
+        backgroundColor: '#283542',
+        height: 60,
+        fontSize: 20,
+        color: '#fff', 
+        width: 300,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 15
+    },
+    searchInputOnFocus:{
+        backgroundColor: '#283542',
+        height: 60,
+        fontSize: 20,
+        color: '#fff', 
+        width: 300,
+        borderRadius: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderColor: '#006cbf',
+        borderWidth: 1,
+        padding: 15
+    },
 });
 
 export default styles;
